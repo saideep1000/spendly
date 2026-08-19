@@ -113,3 +113,15 @@ def create_user(name, email, password):
     finally:
         conn.close()
     return user_id
+
+
+def get_user_by_id(user_id):
+    """Returns None if no user with this id exists."""
+    conn = get_db()
+    try:
+        user = conn.execute(
+            "SELECT * FROM users WHERE id = ?", (user_id,)
+        ).fetchone()
+    finally:
+        conn.close()
+    return user

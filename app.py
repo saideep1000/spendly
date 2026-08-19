@@ -1,10 +1,18 @@
 import re
 import sqlite3
+from datetime import datetime
 
 from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
-from database.db import create_user, get_db, get_user_by_email, init_db, seed_db
+from database.db import (
+    create_user,
+    get_db,
+    get_user_by_email,
+    get_user_by_id,
+    init_db,
+    seed_db,
+)
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -114,7 +122,20 @@ def logout():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(session["user_id"])
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    joined = datetime.strptime(user["created_at"], "%Y-%m-%d %H:%M:%S")
+    member_since = f"{joined.strftime('%B')} {joined.day}, {joined.year}"
+
+    return render_template(
+        "profile.html", name=user["name"], email=user["email"], member_since=member_since
+    )
 
 
 @app.route("/expenses/add")
